@@ -9,14 +9,14 @@ from utils import print_with_color
 configs = load_config()
 
 
-class AndroidElement:
+class AndroidElement:   # 安卓元素类
     def __init__(self, uid, bbox, attrib):
         self.uid = uid
         self.bbox = bbox
         self.attrib = attrib
 
 
-def execute_adb(adb_command):
+def execute_adb(adb_command):  # 执行adb命令
     # print(adb_command)
     result = subprocess.run(adb_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode == 0:
@@ -39,20 +39,24 @@ def list_all_devices():
 
 
 def get_id_from_element(elem):
+    # 提取元素的 bounds 并计算宽高
     bounds = elem.attrib["bounds"][1:-1].split("][")
     x1, y1 = map(int, bounds[0].split(","))
     x2, y2 = map(int, bounds[1].split(","))
     elem_w, elem_h = x2 - x1, y2 - y1
+    # 生成元素 ID
     if "resource-id" in elem.attrib and elem.attrib["resource-id"]:
         elem_id = elem.attrib["resource-id"].replace(":", ".").replace("/", "_")
     else:
         elem_id = f"{elem.attrib['class']}_{elem_w}_{elem_h}"
+    # 添加 content-desc 信息
     if "content-desc" in elem.attrib and elem.attrib["content-desc"] and len(elem.attrib["content-desc"]) < 20:
         content_desc = elem.attrib['content-desc'].replace("/", "_").replace(" ", "").replace(":", "_")
         elem_id += f"_{content_desc}"
     return elem_id
 
 
+# 遍历xml树，获取所有元素
 def traverse_tree(xml_path, elem_list, attrib, add_index=False):
     path = []
     for event, elem in ET.iterparse(xml_path, ['start', 'end']):
@@ -94,14 +98,14 @@ class AndroidController:
         self.width, self.height = self.get_device_size()
         self.backslash = "\\"
 
-    def get_device_size(self):
+    def get_device_size(self):   # 获取设备屏幕大小
         adb_command = f"adb -s {self.device} shell wm size"
         result = execute_adb(adb_command)
         if result != "ERROR":
             return map(int, result.split(": ")[1].split("x"))
         return 0, 0
 
-    def get_screenshot(self, prefix, save_dir):
+    def get_screenshot(self, prefix, save_dir):#截屏到本地
         cap_command = f"adb -s {self.device} shell screencap -p " \
                       f"{os.path.join(self.screenshot_dir, prefix + '.png').replace(self.backslash, '/')}"
         pull_command = f"adb -s {self.device} pull " \
@@ -115,7 +119,7 @@ class AndroidController:
             return result
         return result
 
-    def get_xml(self, prefix, save_dir):
+    def get_xml(self, prefix, save_dir):  # 获取当前UI的xml文件
         dump_command = f"adb -s {self.device} shell uiautomator dump " \
                        f"{os.path.join(self.xml_dir, prefix + '.xml').replace(self.backslash, '/')}"
         pull_command = f"adb -s {self.device} pull " \
@@ -129,29 +133,29 @@ class AndroidController:
             return result
         return result
 
-    def back(self):
+    def back(self):  # 模拟返回键
         adb_command = f"adb -s {self.device} shell input keyevent KEYCODE_BACK"
         ret = execute_adb(adb_command)
         return ret
 
-    def tap(self, x, y):
+    def tap(self, x, y):  # 模拟点击屏幕
         adb_command = f"adb -s {self.device} shell input tap {x} {y}"
         ret = execute_adb(adb_command)
         return ret
 
-    def text(self, input_str):
+    def text(self, input_str):  # 模拟输入文本
         input_str = input_str.replace(" ", "%s")
         input_str = input_str.replace("'", "")
         adb_command = f"adb -s {self.device} shell input text {input_str}"
         ret = execute_adb(adb_command)
         return ret
 
-    def long_press(self, x, y, duration=1000):
+    def long_press(self, x, y, duration=1000):# 长按屏幕坐标
         adb_command = f"adb -s {self.device} shell input swipe {x} {y} {x} {y} {duration}"
         ret = execute_adb(adb_command)
         return ret
 
-    def swipe(self, x, y, direction, dist="medium", quick=False):
+    def swipe(self, x, y, direction, dist="medium", quick=False):   # 滑动屏幕
         unit_dist = int(self.width / 10)
         if dist == "long":
             unit_dist *= 3
@@ -172,9 +176,23 @@ class AndroidController:
         ret = execute_adb(adb_command)
         return ret
 
-    def swipe_precise(self, start, end, duration=400):
+    def swipe_precise(self, start, end, duration=400):  # 精确滑动
         start_x, start_y = start
         end_x, end_y = end
         adb_command = f"adb -s {self.device} shell input swipe {start_x} {start_x} {end_x} {end_y} {duration}"
         ret = execute_adb(adb_command)
         return ret
+
+        
+if __name__ == "__main__":
+    # 获取设备截图并保存到当前目录
+    devices = list_all_devices()
+    controller = AndroidController(devices[0]) if devices else None
+    if controller:
+        screenshot_path = controller.get_screenshot("screen", os.getcwd())
+        if screenshot_path != "ERROR":
+            print_with_color(f"截图已保存到: {screenshot_path}", "green")
+        else:
+            print_with_color("截图失败", "red")
+
+    print(devices)
