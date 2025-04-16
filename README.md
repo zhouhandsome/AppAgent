@@ -25,6 +25,21 @@
 ℹ️Should you encounter any issues⚠️ while using our project, please feel free to report them on [GitHub Issues](https://github.com/mnotgod96/AppAgent/issues) or reach out to [Dr. Chi Zhang](https://icoz69.github.io/) via email at dr.zhang.chi@outlook.com.
 
 ℹ️This project will be synchronously updated on the official [TencentQQGYLab](https://github.com/TencentQQGYLab/AppAgent) Github Page.
+e:\AppAgent/
+├── scripts/                 # 核心功能模块
+│   ├── and_controller.py   # Android设备控制
+│   ├── model.py            # 多模态模型交互
+│   ├── document_generation.py # 文档生成器
+│   └── ...                 # 其他功能模块
+├── learn.py                # 探索阶段主入口
+├── run.py                  # 部署阶段主入口
+├── config.py               # 配置文件（未展示）
+├── prompts.py              # 提示词模板（未展示）
+├── utils.py                # 工具函数（未展示）
+└── apps/                   # 应用数据存储
+    └── [app_name]/
+        ├── demos/          # 用户演示数据
+        └── demo_docs/      # 生成的文档
 
 ## 📝 Changelog
 
